@@ -1,4 +1,4 @@
-package com.tutorial.crud;
+package com.cookingwebsite.crud;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

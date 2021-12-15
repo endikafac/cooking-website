@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class UserDTO {
-	
+public class KeywordDTO {
+
 	private int id;
-	private String username;
-	private String password;
+	private String name;
+	private String description;
 	private Integer auCreationUser;
 	private Timestamp auCreationDate;
 	private Integer auModificationUser;

@@ -18,69 +18,69 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cookingwebsite.crud.dto.MensajeDTO;
-import com.cookingwebsite.crud.dto.RoleDTO;
-import com.cookingwebsite.crud.model.Role;
-import com.cookingwebsite.crud.service.RoleService;
+import com.cookingwebsite.crud.dto.RecipeDTO;
+import com.cookingwebsite.crud.model.Recipe;
+import com.cookingwebsite.crud.service.RecipeService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@Tag(name = "Role", description = "Roles API")
+@Tag(name = "Recipe", description = "Recipes API")
 @RestController
-@RequestMapping("/role")
+@RequestMapping("/recipe")
 //@CrossOrigin(origins = "http://localhost:4200")
-public class RoleController {
+public class RecipeController {
 
 	// private static Logger LOGGER =
 	// Logger.getLogger(CategoriaController.class.getName());
 	
 	@Autowired
-	RoleService roleService;
+	RecipeService recipeService;
 	
-	@GetMapping("/lista")
-	public ResponseEntity<List<Role>> list() {
-		final List<Role> list = roleService.list();
-		return new ResponseEntity<List<Role>>(list, HttpStatus.OK);
+	@GetMapping("/list")
+	public ResponseEntity<List<Recipe>> list() {
+		final List<Recipe> list = recipeService.list();
+		return new ResponseEntity<List<Recipe>>(list, HttpStatus.OK);
 	}
 	
 	@GetMapping("/detail/{id}")
 	public ResponseEntity<?> getById(@PathVariable("id") final int id) {
-		if (!roleService.existsById(id)) {
+		if (!recipeService.existsById(id)) {
 			return new ResponseEntity<MensajeDTO>(new MensajeDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
-		final Role role = roleService.getOne(id).get();
-		return new ResponseEntity<Role>(role, HttpStatus.OK);
+		final Recipe recipe = recipeService.getOne(id).get();
+		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
 	}
 	
 	@GetMapping("/detailname/{name}")
 	public ResponseEntity<?> getByNombre(@PathVariable("name") final String name) {
-		if (!roleService.existsByNombre(name)) {
+		if (!recipeService.existsByNombre(name)) {
 			return new ResponseEntity<MensajeDTO>(new MensajeDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
-		final Role role = roleService.getByName(name).get();
-		return new ResponseEntity<Role>(role, HttpStatus.OK);
+		final Recipe recipe = recipeService.getByName(name).get();
+		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
 	}
 	
 	@PostMapping("/create")
-	public ResponseEntity<?> create(@RequestBody final RoleDTO roleDTO) {
+	public ResponseEntity<?> create(@RequestBody final RecipeDTO recipeDTO) {
 		ResponseEntity<?> responseEntity = null;
-		if (StringUtils.isBlank(roleDTO.getName())) {
+		if (StringUtils.isBlank(recipeDTO.getName())) {
 			responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("The name is mandatory"),
 					HttpStatus.BAD_REQUEST);
 		}
-		if (roleService.existsByNombre(roleDTO.getName())) {
+		if (recipeService.existsByNombre(recipeDTO.getName())) {
 			responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("This name already exists"),
 					HttpStatus.BAD_REQUEST);
 		}
 		
-		final Role role = new Role(roleDTO.getName(), roleDTO.getDescription(), roleDTO.getAuCreationUser());
-		roleService.save(role);
+		final Recipe recipe = new Recipe(recipeDTO.getName(), recipeDTO.getDescription(), recipeDTO.getUser());
+		recipeService.save(recipe);
 		responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("Role created"), HttpStatus.OK);
 		return responseEntity;
 	}
 	
 	@PutMapping("/update/{id}")
-	public ResponseEntity<?> update(@PathVariable("id") final int id, @RequestBody final RoleDTO roleDTO) {
-		if (!roleService.existsById(id)) {
+	public ResponseEntity<?> update(@PathVariable("id") final int id, @RequestBody final RecipeDTO recipeDTO) {
+		if (!recipeService.existsById(id)) {
 			return new ResponseEntity<MensajeDTO>(new MensajeDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
 		/*
@@ -89,27 +89,28 @@ public class RoleController {
 		 * return new ResponseEntity<MensajeDTO>(new MensajeDTO("ese nombre ya existe"),
 		 * HttpStatus.BAD_REQUEST); }
 		 */
-		if (StringUtils.isBlank(roleDTO.getName())) {
+		if (StringUtils.isBlank(recipeDTO.getName())) {
 			return new ResponseEntity<MensajeDTO>(new MensajeDTO("name is mandatory "), HttpStatus.BAD_REQUEST);
 		}
 		
-		final Role role = roleService.getOne(id).get();
-		role.setName(roleDTO.getName());
-		role.setDescription(roleDTO.getDescription());
-		role.setAuModificationUser(roleDTO.getAuModificationUser());
+		final Recipe recipe = recipeService.getOne(id).get();
+		recipe.setName(recipeDTO.getName());
+		recipe.setDescription(recipeDTO.getDescription());
+		recipe.setUser(recipeDTO.getUser());
+		recipe.setAuModificationUser(recipeDTO.getAuModificationUser());
 		final Timestamp fechaActual = new Timestamp(Calendar.getInstance().getTimeInMillis());
-		role.setAuModificationDate(fechaActual);
-		roleService.save(role);
+		recipe.setAuModificationDate(fechaActual);
+		recipeService.save(recipe);
 		return new ResponseEntity<MensajeDTO>(new MensajeDTO("role updated"), HttpStatus.OK);
 	}
 	
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> delete(@PathVariable("id") final int id) {
-		if (!roleService.existsById(id)) {
+		if (!recipeService.existsById(id)) {
 			return new ResponseEntity<MensajeDTO>(new MensajeDTO("no existe"), HttpStatus.NOT_FOUND);
 		}
 		
-		roleService.delete(id);
+		recipeService.delete(id);
 		return new ResponseEntity<MensajeDTO>(new MensajeDTO("role deleted"), HttpStatus.OK);
 	}
 	

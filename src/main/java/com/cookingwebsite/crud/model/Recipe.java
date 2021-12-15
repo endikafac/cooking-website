@@ -2,13 +2,20 @@ package com.cookingwebsite.crud.model;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.cookingwebsite.crud.security.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,11 +25,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Recipe", schema = "atenea")
+@Table(name = "Recipe", schema = "cookingwebsite")
 public class Recipe {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
+	
+	@OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+	private User user;
+	
+	//	cascade=CascadeType.ALL
+	@OneToMany(targetEntity=Keyword.class, mappedBy="recipe", fetch = FetchType.LAZY)
+    private List<Keyword> keywords; 
 	
 	@Column(nullable = false, length = 50, unique = true)
 	private String name;
@@ -49,11 +64,12 @@ public class Recipe {
 	 * @param nombre
 	 * @param descripcion
 	 */
-	public Recipe(final String name, final String description, final Integer auCreationUser) {
+	public Recipe(final String name, final String description, final User user) {
 		super();
 		this.name = name;
 		this.description = description;
-		this.auCreationUser = auCreationUser;
+		this.user = user;
+		this.auCreationUser = user.getId();
 		final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		this.auCreationDate = currentDate;
 		this.auActive = true;
