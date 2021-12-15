@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +37,7 @@ public class RecipeController {
 	@Autowired
 	RecipeService recipeService;
 	
+	
 	@GetMapping("/list")
 	public ResponseEntity<List<Recipe>> list() {
 		final List<Recipe> list = recipeService.list();
@@ -60,6 +62,7 @@ public class RecipeController {
 		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@PostMapping("/create")
 	public ResponseEntity<?> create(@RequestBody final RecipeDTO recipeDTO) {
 		ResponseEntity<?> responseEntity = null;
@@ -74,14 +77,15 @@ public class RecipeController {
 		
 		final Recipe recipe = new Recipe(recipeDTO.getName(), recipeDTO.getDescription(), recipeDTO.getUser());
 		recipeService.save(recipe);
-		responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("Role created"), HttpStatus.OK);
+		responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe created"), HttpStatus.OK);
 		return responseEntity;
 	}
 	
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@PutMapping("/update/{id}")
 	public ResponseEntity<?> update(@PathVariable("id") final int id, @RequestBody final RecipeDTO recipeDTO) {
 		if (!recipeService.existsById(id)) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("It does not exist"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
 		}
 		/*
 		 * if(categoriaService.existsByNombre(categoriaDto.getNombre()) &&
@@ -101,17 +105,18 @@ public class RecipeController {
 		final Timestamp fechaActual = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		recipe.setAuModificationDate(fechaActual);
 		recipeService.save(recipe);
-		return new ResponseEntity<MensajeDTO>(new MensajeDTO("role updated"), HttpStatus.OK);
+		return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe updated"), HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> delete(@PathVariable("id") final int id) {
 		if (!recipeService.existsById(id)) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("no existe"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
 		}
 		
 		recipeService.delete(id);
-		return new ResponseEntity<MensajeDTO>(new MensajeDTO("role deleted"), HttpStatus.OK);
+		return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe deleted"), HttpStatus.OK);
 	}
 	
 }

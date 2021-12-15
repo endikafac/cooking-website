@@ -35,7 +35,7 @@ public class Keyword {
     @JoinColumn(name = "recipe_id", referencedColumnName = "id")
 	private Recipe recipe;
 		
-	@Column(nullable = false, length = 50, unique = true)
+	@Column(nullable = false, length = 100)
 	private String keyword;
 
 	@Column(name = "au_creation_user", nullable = false)

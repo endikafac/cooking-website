@@ -1,6 +1,7 @@
 package com.cookingwebsite.crud.security.entity;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 
 
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,18 +25,27 @@ public class User {
     private int id;
     
     @NotNull
-    @Column(unique = true)
+    @Column(nullable = false, length = 50, unique = true)
     private String username;
+    
+
+    
     @NotNull
-    private String email;
-    @NotNull
+    @Column(nullable = false, length = 100)
     private String password;
     
     @NotNull
+    @Column(nullable = false, length = 150)
     private String firstname;
     
     @NotNull
+    @Column(nullable = false, length = 300)
     private String lastname;
+    
+    @NotNull
+    @Email
+    @Column(nullable = false, length = 300)
+    private String email;
     
     @Column(name = "au_creation_user", nullable = false)
 	private Integer auCreationUser;
@@ -64,6 +75,10 @@ public class User {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.auCreationUser = 0;
+        final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
+		this.auCreationDate = currentDate;
+		this.auActive = true;
     }
 
 }

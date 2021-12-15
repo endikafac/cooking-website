@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.Calendar;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ public class Role {
     private int id;
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", length = 50, nullable = false)
     private RoleName roleName;
     
     @Column(name = "au_creation_user", nullable = false)
@@ -39,4 +40,14 @@ public class Role {
 
 	@Column(name = "au_active", nullable = false)
 	private Boolean auActive;
+	
+	public Role(final RoleName roleName) {
+		super();
+		this.roleName = roleName;
+		this.auCreationUser = 1;
+		final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
+		this.auCreationDate = currentDate;
+		this.auActive = true;
+		
+	}
 }
