@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cookingwebsite.crud.dto.MensajeDTO;
+import com.cookingwebsite.crud.dto.MessageDTO;
 import com.cookingwebsite.crud.dto.RecipeDTO;
 import com.cookingwebsite.crud.model.Recipe;
 import com.cookingwebsite.crud.service.RecipeService;
@@ -47,7 +47,7 @@ public class RecipeController {
 	@GetMapping("/detail/{id}")
 	public ResponseEntity<?> getById(@PathVariable("id") final int id) {
 		if (!recipeService.existsById(id)) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("It does not exist"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
 		final Recipe recipe = recipeService.getOne(id).get();
 		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
@@ -56,7 +56,7 @@ public class RecipeController {
 	@GetMapping("/detailname/{name}")
 	public ResponseEntity<?> getByNombre(@PathVariable("name") final String name) {
 		if (!recipeService.existsByNombre(name)) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("It does not exist"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
 		final Recipe recipe = recipeService.getByName(name).get();
 		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
@@ -67,17 +67,17 @@ public class RecipeController {
 	public ResponseEntity<?> create(@RequestBody final RecipeDTO recipeDTO) {
 		ResponseEntity<?> responseEntity = null;
 		if (StringUtils.isBlank(recipeDTO.getName())) {
-			responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("The name is mandatory"),
+			responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("The name is mandatory"),
 					HttpStatus.BAD_REQUEST);
 		}
 		if (recipeService.existsByNombre(recipeDTO.getName())) {
-			responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("This name already exists"),
+			responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("This name already exists"),
 					HttpStatus.BAD_REQUEST);
 		}
 		
 		final Recipe recipe = new Recipe(recipeDTO.getName(), recipeDTO.getDescription(), recipeDTO.getUser());
 		recipeService.save(recipe);
-		responseEntity = new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe created"), HttpStatus.OK);
+		responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("Recipe created"), HttpStatus.OK);
 		return responseEntity;
 	}
 	
@@ -85,7 +85,7 @@ public class RecipeController {
 	@PutMapping("/update/{id}")
 	public ResponseEntity<?> update(@PathVariable("id") final int id, @RequestBody final RecipeDTO recipeDTO) {
 		if (!recipeService.existsById(id)) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
 		}
 		/*
 		 * if(categoriaService.existsByNombre(categoriaDto.getNombre()) &&
@@ -94,7 +94,7 @@ public class RecipeController {
 		 * HttpStatus.BAD_REQUEST); }
 		 */
 		if (StringUtils.isBlank(recipeDTO.getName())) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("name is mandatory "), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("name is mandatory "), HttpStatus.BAD_REQUEST);
 		}
 		
 		final Recipe recipe = recipeService.getOne(id).get();
@@ -105,18 +105,18 @@ public class RecipeController {
 		final Timestamp fechaActual = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		recipe.setAuModificationDate(fechaActual);
 		recipeService.save(recipe);
-		return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe updated"), HttpStatus.OK);
+		return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe updated"), HttpStatus.OK);
 	}
 	
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> delete(@PathVariable("id") final int id) {
 		if (!recipeService.existsById(id)) {
-			return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
 		}
 		
 		recipeService.delete(id);
-		return new ResponseEntity<MensajeDTO>(new MensajeDTO("Recipe deleted"), HttpStatus.OK);
+		return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe deleted"), HttpStatus.OK);
 	}
 	
 }
