@@ -24,6 +24,12 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer> {
 
 	@Query("SELECT r FROM Recipe r WHERE r.user = ?1")
 	public List<Recipe> searchByUser(User user);
+	
+	@Query(nativeQuery = true, value = "SELECT r.* FROM Recipe r INNER JOIN RecipeKeyword rc ON rc.recipe_id = r.id INNER JOIN Keyword k ON k.id = rc.keyword_id AND k.keyword LIKE %?1%")
+	public List<Recipe> searchByKeyword(String keyword);
+
+	@Query(nativeQuery = true, value = "SELECT r.* FROM Recipe r INNER JOIN RecipeKeyword rc ON rc.recipe_id = r.id AND rc.keyword_id = ?1")
+	public List<Recipe> searchByKeywordId(Integer keywordId);
 
 	boolean existsByName(String name);
 }

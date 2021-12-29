@@ -45,25 +45,25 @@ import lombok.extern.slf4j.Slf4j;
 @CrossOrigin(origins = "*")
 @Slf4j
 public class RecipeController {
-
-	@Autowired
-	RecipeService recipeService;
-
-	@Autowired
-	KeywordService keywordService;
-
-	@Autowired
-	CommentService commentService;
 	
 	@Autowired
-	UserService userService;
+	RecipeService recipeService;
+	
+	@Autowired
+	KeywordService keywordService;
+	
+	@Autowired
+	CommentService commentService;
 
+	@Autowired
+	UserService userService;
+	
 	@GetMapping("/list")
 	public ResponseEntity<List<Recipe>> list() {
 		final List<Recipe> list = this.recipeService.list();
 		return new ResponseEntity<List<Recipe>>(list, HttpStatus.OK);
 	}
-	
+
 	@GetMapping("/detail/{id}")
 	public ResponseEntity<?> getById(@PathVariable("id") final int id) {
 		if (!this.recipeService.existsById(id)) {
@@ -72,7 +72,7 @@ public class RecipeController {
 		final Recipe recipe = this.recipeService.getOne(id).get();
 		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
 	}
-	
+
 	@GetMapping("/detailname/{name}")
 	public ResponseEntity<?> getByNombre(@PathVariable("name") final String name) {
 		if (!this.recipeService.existsByName(name)) {
@@ -81,7 +81,7 @@ public class RecipeController {
 		final Recipe recipe = this.recipeService.getByName(name).get();
 		return new ResponseEntity<Recipe>(recipe, HttpStatus.OK);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_CHEF')")
 	@PostMapping("/create")
 	public ResponseEntity<?> create(@RequestBody final RecipeDTO recipeDTO) {
@@ -92,7 +92,7 @@ public class RecipeController {
 		if (this.recipeService.existsByName(recipeDTO.getName())) {
 			responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("This name already exists"), HttpStatus.BAD_REQUEST);
 		}
-		
+
 		final Recipe recipe = new Recipe(recipeDTO.getName(), recipeDTO.getDescription(), recipeDTO.getUser());
 		if (recipeDTO.getAuCreationUser() != null) {
 			recipe.setAuCreationUser(recipeDTO.getAuCreationUser());
@@ -100,15 +100,15 @@ public class RecipeController {
 		if (recipeDTO.getAuCreationDate() != null) {
 			recipe.setAuCreationDate(recipeDTO.getAuCreationDate());
 		}
-		
+
 		Set<Keyword> keywords = this.parseListKeywordsDTOKeyword(recipeDTO.getKeywords());
 		recipe.setKeywords(keywords);
-
+		
 		this.recipeService.save(recipe);
 		responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("Recipe created"), HttpStatus.OK);
 		return responseEntity;
 	}
-
+	
 	// @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasRole('ROLE_CHEF')")
 	@PutMapping("/update/{id}")
@@ -124,40 +124,40 @@ public class RecipeController {
 		if (StringUtils.isBlank(recipeDTO.getName())) {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("name is mandatory "), HttpStatus.BAD_REQUEST);
 		}
-		
+
 		final Recipe recipe = this.recipeService.getOne(id).get();
-		
+
 		recipe.setName(recipeDTO.getName());
 		recipe.setDescription(recipeDTO.getDescription());
 		recipe.setUser(recipeDTO.getUser());
 		recipe.setAuModificationUser(recipeDTO.getAuModificationUser());
 		final Timestamp fechaActual = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		recipe.setAuModificationDate(fechaActual);
-
+		
 		Set<Keyword> keywords = this.parseListKeywordsDTOKeyword(recipeDTO.getKeywords());
 		recipe.setKeywords(keywords);
-
+		
 		Set<Comment> comments = this.parseListCommentsDTOComment(recipeDTO.getComments());
 		recipe.setComments(comments);
-		
+
 		this.recipeService.save(recipe);
 //		this.deleteKeywords(recipe.getKeywords());
 //		this.deleteComments(recipe.getComments());
-
+		
 		return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe updated"), HttpStatus.OK);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_CHEF')")
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> delete(@PathVariable("id") final int id) {
 		if (!this.recipeService.existsById(id)) {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe not exist"), HttpStatus.NOT_FOUND);
 		}
-		
+
 		this.recipeService.delete(id);
 		return new ResponseEntity<MessageDTO>(new MessageDTO("Recipe deleted"), HttpStatus.OK);
 	}
-
+	
 	@PostMapping("/search")
 	public ResponseEntity<?> search(@RequestBody final RecipeFilterDTO recipeFilterDTO) {
 		ResponseEntity<?> responseEntity = null;
@@ -167,8 +167,6 @@ public class RecipeController {
 		Integer id = null;
 		String name = null;
 		String description = null;
-//		Integer userId = null;
-//		User user = null;
 		if (recipeFilterDTO.getFilter() != null) {
 			name = recipeFilterDTO.getFilter();
 			description = recipeFilterDTO.getFilter();
@@ -177,38 +175,19 @@ public class RecipeController {
 			} catch (Exception e) {
 				id = 0;
 			}
-//			try {
-//				userId = Integer.parseInt(recipeFilterDTO.getFilter());
-//			} catch (Exception e) {
-//				userId = 0;
-//			}
-//			if ((userId != null) && (userId != 0)) {
-//				try {
-//					user = this.userService.getOne(userId).get();
-//				} catch (Exception e) {
-//					user = null;
-//				}
-//			}
-//			if (user == null) {
-//				try {
-//					user = this.userService.getByUsername(recipeFilterDTO.getFilter()).get();
-//				} catch (Exception e) {
-//					user = null;
-//				}
-//			}
 		}
-
+		
 		List<Recipe> list = new ArrayList<Recipe>();
 		try {
 			list = this.recipeService.search(id, name, description);
 		} catch (Exception e) {
 			log.error("Error searching recipes (method-recipeService.search)...".concat(e.getMessage()));
 		}
-
+		
 		List<User> userList = new ArrayList<User>();
 		try {
 			userList = this.userService.search(recipeFilterDTO.getFilter());
-
+			
 		} catch (Exception e) {
 			log.error("Error searching recipes...".concat(e.getMessage()));
 		}
@@ -230,10 +209,10 @@ public class RecipeController {
 			}
 		}
 		responseEntity = new ResponseEntity<List<Recipe>>(list, HttpStatus.OK);
-
+		
 		return responseEntity;
 	}
-	
+
 	@PostMapping("/findByFilters")
 	public ResponseEntity<?> findByFilters(@RequestBody final RecipeFilterDTO recipeFilterDTO) {
 		ResponseEntity<?> responseEntity = null;
@@ -246,13 +225,106 @@ public class RecipeController {
 			name = recipeFilterDTO.getFilter();
 			description = recipeFilterDTO.getFilter();
 		}
-
+		
 		List<Recipe> list = this.recipeService.searchByNameOrDescription(name, description);
 		responseEntity = new ResponseEntity<List<Recipe>>(list, HttpStatus.OK);
+		
+		return responseEntity;
+	}
+	
+	@PostMapping("/searchByKeyword")
+	public ResponseEntity<?> searchByKeyword(@RequestBody final List<RecipeFilterDTO> recipeFilterDTOs) {
+		ResponseEntity<?> responseEntity = null;
+		List<Recipe> list = new ArrayList<Recipe>();
 
+		if ((recipeFilterDTOs != null) && !recipeFilterDTOs.isEmpty()) {
+			for (RecipeFilterDTO recipeFilterDTO : recipeFilterDTOs) {
+				if (StringUtils.isBlank(recipeFilterDTO.getFilter())) {
+					responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("The filter is mandatory"), HttpStatus.BAD_REQUEST);
+				}
+			}
+		} else {
+			responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("It must be an array and cannot be empty."),
+					HttpStatus.BAD_REQUEST);
+		}
+		if (responseEntity == null) {
+			String keyword = null;
+			if ((recipeFilterDTOs != null) && !recipeFilterDTOs.isEmpty()) {
+				for (RecipeFilterDTO recipeFilterDTO : recipeFilterDTOs) {
+					if (recipeFilterDTO.getFilter() != null) {
+						keyword = recipeFilterDTO.getFilter();
+						if (keyword != null) {
+							List<Recipe> listAux = new ArrayList<Recipe>();
+							try {
+								listAux = this.recipeService.searchByKeyword(keyword);
+							} catch (Exception e) {
+								log.error("Error searching recipes (method-recipeService.searchByKeyword)...".concat(e.getMessage()));
+							}
+							if (!listAux.isEmpty()) {
+								for (Recipe recipeAux : listAux) {
+									if (!list.contains(recipeAux)) {
+										list.add(recipeAux);
+									}
+								}
+							}
+						}
+
+					}
+				}
+			}
+			responseEntity = new ResponseEntity<List<Recipe>>(list, HttpStatus.OK);
+		}
 		return responseEntity;
 	}
 
+	@PostMapping("/searchByKeywordId")
+	public ResponseEntity<?> searchByKeywordId(@RequestBody final List<RecipeFilterDTO> recipeFilterDTOs) {
+		ResponseEntity<?> responseEntity = null;
+		List<Recipe> list = new ArrayList<Recipe>();
+
+		if ((recipeFilterDTOs != null) && !recipeFilterDTOs.isEmpty()) {
+			for (RecipeFilterDTO recipeFilterDTO : recipeFilterDTOs) {
+				if (StringUtils.isBlank(recipeFilterDTO.getFilter())) {
+					responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("The filter is mandatory"), HttpStatus.BAD_REQUEST);
+				}
+			}
+		} else {
+			responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("It must be an array and cannot be empty."),
+					HttpStatus.BAD_REQUEST);
+		}
+		if (responseEntity == null) {
+			Integer keywordId = null;
+			if ((recipeFilterDTOs != null) && !recipeFilterDTOs.isEmpty()) {
+				for (RecipeFilterDTO recipeFilterDTO : recipeFilterDTOs) {
+					if (recipeFilterDTO.getFilter() != null) {
+						try {
+							keywordId = Integer.parseInt(recipeFilterDTO.getFilter());
+						} catch (Exception e) {
+							keywordId = null;
+						}
+						if (keywordId != null) {
+							List<Recipe> listAux = new ArrayList<Recipe>();
+							try {
+								listAux = this.recipeService.searchByKeywordId(keywordId);
+							} catch (Exception e) {
+								log.error("Error searching recipes (method-recipeService.searchByKeywordId)...".concat(e.getMessage()));
+							}
+							if (!listAux.isEmpty()) {
+								for (Recipe recipeAux : listAux) {
+									if (!list.contains(recipeAux)) {
+										list.add(recipeAux);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			responseEntity = new ResponseEntity<List<Recipe>>(list, HttpStatus.OK);
+		}
+		return responseEntity;
+	}
+	
 	/**
 	 * @param KeywordsDTOList
 	 * @return Set<Keyword>
@@ -262,13 +334,15 @@ public class RecipeController {
 		if ((keywordsDTO != null) && (!keywordsDTO.isEmpty())) {
 			for (KeywordDTO keywordDTO : keywordsDTO) {
 				Keyword keyword = new Keyword(keywordDTO.getKeyword(), keywordDTO.getAuCreationUser(), keywordDTO.getAuCreationDate());
-				keywords.add(keyword);
+				if (!keywords.contains(keyword)) {
+					keywords.add(keyword);
+				}
 			}
 		}
 		return keywords;
-		
-	}
 
+	}
+	
 	/**
 	 * @param keywords
 	 * @return boolean
@@ -278,14 +352,14 @@ public class RecipeController {
 		if ((keywords != null) && (!keywords.isEmpty())) {
 			for (Keyword keyword : keywords) {
 				this.keywordService.delete(keyword.getId());
-				
+
 			}
 			isCorrect = true;
 		}
 		return isCorrect;
-		
-	}
 
+	}
+	
 	/**
 	 * @param commentsDTO
 	 * @return Set<Comment>
@@ -295,13 +369,15 @@ public class RecipeController {
 		if ((commentsDTO != null) && (!commentsDTO.isEmpty())) {
 			for (CommentDTO commentDTO : commentsDTO) {
 				Comment comment = new Comment(commentDTO.getComment(), commentDTO.getAuCreationUser(), commentDTO.getAuCreationDate());
-				comments.add(comment);
+				if (!comments.contains(comment)) {
+					comments.add(comment);
+				}
 			}
 		}
 		return comments;
-		
+
 	}
-	
+
 	/**
 	 * @param keywords
 	 * @return boolean
@@ -311,11 +387,11 @@ public class RecipeController {
 		if ((comments != null) && (!comments.isEmpty())) {
 			for (Comment comment : comments) {
 				this.commentService.delete(comment.getId());
-				
+
 			}
 			isCorrect = true;
 		}
 		return isCorrect;
-		
+
 	}
 }

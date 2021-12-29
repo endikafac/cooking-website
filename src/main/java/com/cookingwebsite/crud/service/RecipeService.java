@@ -14,46 +14,54 @@ import com.cookingwebsite.crud.security.entity.User;
 @Service
 @Transactional
 public class RecipeService {
-
+	
 	@Autowired
 	RecipeRepository recipeRepository;
-
+	
 	public List<Recipe> list() {
 		return this.recipeRepository.findAll();
 	}
-
+	
 	public Optional<Recipe> getOne(final int id) {
 		return this.recipeRepository.findById(id);
 	}
-
+	
 	public Optional<Recipe> getByName(final String name) {
 		return this.recipeRepository.findByName(name);
 	}
-
+	
 	public List<Recipe> searchByNameOrDescription(final String name, final String description) {
 		return this.recipeRepository.searchByNameOrDescription(name, description);
 	}
-
+	
 	public List<Recipe> search(final Integer id, final String name, final String description) {
 		return this.recipeRepository.search(id, name, description);
 	}
-	
+
+	public List<Recipe> searchByKeyword(final String keyword) {
+		return this.recipeRepository.searchByKeyword(keyword);
+	}
+
+	public List<Recipe> searchByKeywordId(final Integer keywordId) {
+		return this.recipeRepository.searchByKeywordId(keywordId);
+	}
+
 	public List<Recipe> searchByUser(final User user) {
 		return this.recipeRepository.searchByUser(user);
 	}
-
+	
 	public void save(final Recipe recipe) {
 		this.recipeRepository.save(recipe);
 	}
-
+	
 	public void delete(final int id) {
 		this.recipeRepository.deleteById(id);
 	}
-
+	
 	public boolean existsById(final int id) {
 		return this.recipeRepository.existsById(id);
 	}
-
+	
 	public boolean existsByName(final String name) {
 		return this.recipeRepository.existsByName(name);
 	}

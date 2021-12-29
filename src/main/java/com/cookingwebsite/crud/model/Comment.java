@@ -23,29 +23,29 @@ public class Comment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-	
+
 //	@ManyToOne(fetch = FetchType.EAGER)
 //	@JoinColumn(name = "recipe_id", referencedColumnName = "id")
 //	private Recipe recipe;
-	
+
 	@Column(nullable = false, length = 1000)
 	private String comment;
-	
+
 	@Column(name = "au_creation_user", nullable = false)
 	private Integer auCreationUser;
-	
+
 	@Column(name = "au_creation_date", nullable = false)
 	private Timestamp auCreationDate;
-	
+
 	@Column(name = "au_modification_user", nullable = true)
 	private Integer auModificationUser;
-	
+
 	@Column(name = "au_modification_date", nullable = true)
 	private Timestamp auModificationDate;
-	
+
 	@Column(name = "au_active", nullable = false)
 	private Boolean auActive;
-	
+
 	/**
 	 * @param comment
 	 * @param auCreationUser
@@ -58,9 +58,9 @@ public class Comment {
 		final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		this.auCreationDate = currentDate;
 		this.auActive = true;
-
+		
 	}
-	
+
 	/**
 	 * @param comment
 	 * @param auCreationUser
@@ -78,7 +78,37 @@ public class Comment {
 			this.auCreationDate = currentDate;
 		}
 		this.auActive = true;
-
+		
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (this.getClass() != obj.getClass()) {
+			return false;
+		}
+		Comment other = (Comment) obj;
+		if (this.comment == null) {
+			if (other.comment != null) {
+				return false;
+			}
+		} else if (!this.comment.equals(other.comment)) {
+			return false;
+		}
+		return true;
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = (prime * result) + ((this.comment == null) ? 0 : this.comment.hashCode());
+		return result;
 	}
 	
 }

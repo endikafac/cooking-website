@@ -13,38 +13,38 @@ import com.cookingwebsite.crud.repository.KeywordRepository;
 @Service
 @Transactional
 public class KeywordService {
-	
+
 	@Autowired
 	KeywordRepository keywordRepository;
-	
+
 	public List<Keyword> list() {
 		return this.keywordRepository.findAll();
 	}
-	
+
 	public Optional<Keyword> getOne(final int id) {
 		return this.keywordRepository.findById(id);
 	}
-	
-	public Optional<Keyword> getByKeyword(final String keyword) {
+
+	public List<Keyword> getByKeyword(final String keyword) {
 		return this.keywordRepository.findByKeyword(keyword);
 	}
-	
+
 	public void save(final Keyword keyword) {
 		this.keywordRepository.save(keyword);
 	}
-	
+
 	public void delete(final int id) {
 		this.keywordRepository.deleteById(id);
 	}
-	
+
 	public boolean existsById(final int id) {
 		return this.keywordRepository.existsById(id);
 	}
-	
+
 	public boolean existsByKeyword(final String Keyword) {
 		return this.keywordRepository.existsByKeyword(Keyword);
 	}
-	
+
 	public void deleteInBatch(final List<Keyword> keywords) {
 		this.keywordRepository.deleteInBatch(keywords);
 	}
