@@ -18,23 +18,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Keyword", schema = "cookingwebsite")
-public class Keyword {
+@Table(name = "Comment", schema = "cookingwebsite")
+public class Comment {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	
-	/*
-	 * @OneToOne(fetch = FetchType.LAZY)
-	 *
-	 * @JoinColumn(name = "recipe_id", referencedColumnName = "id")
-	 */
-//	@ManyToOne(fetch = FetchType.LAZY)
+//	@ManyToOne(fetch = FetchType.EAGER)
 //	@JoinColumn(name = "recipe_id", referencedColumnName = "id")
 //	private Recipe recipe;
 	
-	@Column(nullable = false, length = 30)
-	private String keyword;
+	@Column(nullable = false, length = 1000)
+	private String comment;
 	
 	@Column(name = "au_creation_user", nullable = false)
 	private Integer auCreationUser;
@@ -52,12 +47,13 @@ public class Keyword {
 	private Boolean auActive;
 	
 	/**
-	 * @param keyword
+	 * @param comment
 	 * @param auCreationUser
 	 */
-	public Keyword(final String keyword, final Integer auCreationUser) {
+	public Comment(final String comment, final Integer auCreationUser) {
 		super();
-		this.keyword = keyword;
+		this.comment = comment;
+		/* this.user = user; */
 		this.auCreationUser = auCreationUser;
 		final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		this.auCreationDate = currentDate;
@@ -66,13 +62,13 @@ public class Keyword {
 	}
 	
 	/**
-	 * @param keyword
+	 * @param comment
 	 * @param auCreationUser
 	 * @param auCreationDate
 	 */
-	public Keyword(final String keyword, final Integer auCreationUser, final Timestamp auCreationDate) {
+	public Comment(final String comment, final Integer auCreationUser, final Timestamp auCreationDate) {
 		super();
-		this.keyword = keyword;
+		this.comment = comment;
 		/* this.user = user; */
 		this.auCreationUser = auCreationUser;
 		final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
@@ -82,6 +78,7 @@ public class Keyword {
 			this.auCreationDate = currentDate;
 		}
 		this.auActive = true;
-		
+
 	}
+	
 }

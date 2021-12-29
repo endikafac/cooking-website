@@ -12,9 +12,7 @@ import lombok.NoArgsConstructor;
 
 public class KeywordDTO {
 
-	private int id;
-	private String name;
-	private String description;
+	private String keyword;
 	private Integer auCreationUser;
 	private Timestamp auCreationDate;
 	private Integer auModificationUser;

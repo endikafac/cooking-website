@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.cookingwebsite.crud.model.Recipe;
 import com.cookingwebsite.crud.repository.RecipeRepository;
+import com.cookingwebsite.crud.security.entity.User;
 
 @Service
 @Transactional
@@ -18,30 +19,42 @@ public class RecipeService {
 	RecipeRepository recipeRepository;
 
 	public List<Recipe> list() {
-		return recipeRepository.findAll();
+		return this.recipeRepository.findAll();
 	}
 
 	public Optional<Recipe> getOne(final int id) {
-		return recipeRepository.findById(id);
+		return this.recipeRepository.findById(id);
 	}
 
 	public Optional<Recipe> getByName(final String name) {
-		return recipeRepository.findByName(name);
+		return this.recipeRepository.findByName(name);
+	}
+
+	public List<Recipe> searchByNameOrDescription(final String name, final String description) {
+		return this.recipeRepository.searchByNameOrDescription(name, description);
+	}
+
+	public List<Recipe> search(final Integer id, final String name, final String description) {
+		return this.recipeRepository.search(id, name, description);
+	}
+	
+	public List<Recipe> searchByUser(final User user) {
+		return this.recipeRepository.searchByUser(user);
 	}
 
 	public void save(final Recipe recipe) {
-		recipeRepository.save(recipe);
+		this.recipeRepository.save(recipe);
 	}
 
 	public void delete(final int id) {
-		recipeRepository.deleteById(id);
+		this.recipeRepository.deleteById(id);
 	}
 
 	public boolean existsById(final int id) {
-		return recipeRepository.existsById(id);
+		return this.recipeRepository.existsById(id);
 	}
 
-	public boolean existsByNombre(final String name) {
-		return recipeRepository.existsByName(name);
+	public boolean existsByName(final String name) {
+		return this.recipeRepository.existsByName(name);
 	}
 }

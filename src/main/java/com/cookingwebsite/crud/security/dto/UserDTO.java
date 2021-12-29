@@ -1,5 +1,6 @@
 package com.cookingwebsite.crud.security.dto;
 
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,20 +15,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
-	
+
 	@NotBlank
 	private String username;
-	
+
 	private String firstname;
-	
+
 	private String lastname;
 	@Email
 	private String email;
-
+	
 	private String password;
-	
+
+	private Timestamp lastConnection;
+
 	private Boolean auActive;
-	
+
 	private Set<RoleDTO> roles = new HashSet<>();
-	
+
 }
