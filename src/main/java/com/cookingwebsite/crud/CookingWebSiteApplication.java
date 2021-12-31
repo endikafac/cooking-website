@@ -1,38 +1,74 @@
 package com.cookingwebsite.crud;
 
+import org.apache.catalina.Context;
+import org.apache.catalina.connector.Connector;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import lombok.extern.slf4j.Slf4j;
 
 @OpenAPIDefinition(info = @Info(title = "CookingWebSite API Rest ", version = "0.1.0", description = "API Rest service for Cooking Web Site application"))
-
+@SecurityScheme(name = "CookingWebSiteapi", scheme = "bearer", type = SecuritySchemeType.HTTP, in = SecuritySchemeIn.HEADER)
 @SpringBootApplication
 @Slf4j
+@CrossOrigin(origins = "*")
 public class CookingWebSiteApplication extends SpringBootServletInitializer {
-
+	
 	public static void main(final String[] args) {
 		
 		log.info("Starting to run the CookingWebSite application...");
-		SpringApplication.run(CookingWebSiteApplication.class, args);
+		SpringApplication application = new SpringApplication(CookingWebSiteApplication.class);
+		application.setAdditionalProfiles("ssl");
+		// SpringApplication.run(CookingWebSiteApplication.class, args);
+		application.run(args);
 		log.info("CookingWebSite application is up correctly.");
 
-//		StringBuilder body = new StringBuilder("");
-//		body.append("<p>Dear Endika,&nbsp;</p>");
-//		body.append("<p>Welcome to <strong>Cooking Web Site</strong>. We are providing you with your temporary password - \"XXX\".</p>");
-//		body.append(
-//				"<p>To access the application you can click <a href=\"http://localhost:4200/cooking-website/login\" target=\"_blank\" rel=\"noopener\">here</a>.</p>");
-//		body.append("<p>Thanks a lot,</p>");
-//		body.append("<p>Best regards,</p>");
-//		body.append("<p></p>");
-//		body.append("<p><strong>Cooking Web Site Team</strong></p>");
-//		List<String> to = new ArrayList<String>();
-//		to.add("endika.fernandez@twtspain.com");
-//		to.add("endika.fernandezcuesta@gmail.com");
-//		SendEmails.SendEmail(to, "Asunto", body.toString());
+	}
+	
+	@Bean
+	public ServletWebServerFactory servletContainer() {
+		// Enable SSL Trafic
+		TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory() {
+			@Override
+			protected void postProcessContext(Context context) {
+				SecurityConstraint securityConstraint = new SecurityConstraint();
+				securityConstraint.setUserConstraint("CONFIDENTIAL");
+				SecurityCollection collection = new SecurityCollection();
+				collection.addPattern("/*");
+				securityConstraint.addCollection(collection);
+				context.addConstraint(securityConstraint);
+			}
+		};
+		
+		// Add HTTP to HTTPS redirect
+		tomcat.addAdditionalTomcatConnectors(this.httpToHttpsRedirectConnector());
+		
+		return tomcat;
+	}
+	
+	/*
+	 * We need to redirect from HTTP to HTTPS. Without SSL, this application used port 8082. With SSL it will use port 8443.
+	 * So, any request for 8082 needs to be redirected to HTTPS on 8443.
+	 */
+	private Connector httpToHttpsRedirectConnector() {
+		Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
+		connector.setScheme("http");
+		connector.setPort(8080);
+		connector.setSecure(false);
+		connector.setRedirectPort(8443);
+		return connector;
 	}
 
 }

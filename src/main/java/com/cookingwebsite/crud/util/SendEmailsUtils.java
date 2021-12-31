@@ -58,7 +58,7 @@ public class SendEmailsUtils {
 			}
 		}
 		body.append(
-				"<p>To access the application you can click <a href=\"http://localhost:4200/cooking-website/login\" target=\"_blank\" rel=\"noopener\">here</a>.</p>");
+				"<p>To access the application you can click <a href=\"https://localhost:4200/cooking-website/login\" target=\"_blank\" rel=\"noopener\">here</a>.</p>");
 		body.append("<p>Thanks a lot,</p>");
 		body.append("<p>Best regards,</p>");
 		body.append("<p></p>");
@@ -79,7 +79,7 @@ public class SendEmailsUtils {
 			}
 		}
 
-		SendEmails.SendEmail(to, "Asunto", body.toString());
+		SendEmails.SendEmail(to, "Cooking Web Site - User Credentials", body.toString());
 	}
 
 }

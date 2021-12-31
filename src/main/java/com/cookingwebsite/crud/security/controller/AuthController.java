@@ -55,22 +55,22 @@ import lombok.extern.slf4j.Slf4j;
 @CrossOrigin
 @Slf4j
 public class AuthController {
-
+	
 	@Autowired
 	PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
+	
 	@Autowired
 	AuthenticationManager authenticationManager;
-
+	
 	@Autowired
 	UserService userService;
-
+	
 	@Autowired
 	RoleService roleService;
-
+	
 	@Autowired
 	JwtProvider jwtProvider;
-
+	
 	@PostMapping("/new")
 	public ResponseEntity<?> create(@Valid @RequestBody UserDTO userDto, BindingResult bindingResult) {
 		Boolean sendMail = false;
@@ -94,109 +94,24 @@ public class AuthController {
 			if (StringUtils.isBlank(userDto.getPassword())) {
 				return new ResponseEntity<MessageDTO>(new MessageDTO("This password is mandatory"), HttpStatus.BAD_REQUEST);
 			}
-			
+
 			userDto.setPassword(userDto.getPassword());
-			
+
 			parameters.put("firstname", userDto.getFirstname());
 			parameters.put("username", userDto.getUsername());
 			parameters.put("password", userDto.getPassword());
 			parameters.put("email", userDto.getEmail());
 			parameters.put("isNewUser", true);
-			
+
 			String hashedPassword = this.passwordEncoder.encode(userDto.getPassword());
-			
+
 			User user = new User(userDto.getUsername(), "", "", userDto.getEmail(), hashedPassword);
-			
-			Set<Role> roles = new HashSet<Role>();
-			/*
-			 * If the role is in the array, we insert it, otherwise the User role is added.
-			 */
-			roles = this.parseListRoleDTORole(userDto.getRoles());
-			user.setRoles(roles);
-			this.userService.save(user);
-			
-			/*
-			 * It is saved first and once created, the generated user's own user identifier is saved as the creation user.
-			 */
-			String username = user.getUsername();
-			User createdUser = this.getUserByUsername(username);
-			if (createdUser != null) {
-				user.setAuCreationUser(createdUser.getId());
-				this.userService.save(user);
-			}
-			log.info("Saved user");
-		} catch (Exception e) {
-			log.error(("ERROR - Creating the user --> ").concat(userDto.getUsername()).concat(" - ").concat(e.getMessage()));
-			sendMail = false;
-		} finally {
-			if (sendMail) {
-				SendEmailsUtils.sendUserCredentials(parameters);
-			}
-		}
-		return new ResponseEntity<MessageDTO>(new MessageDTO("Saved user"), HttpStatus.CREATED);
-	}
-
-	@PostMapping("/admin-new")
-	public ResponseEntity<?> adminCreate(@Valid @RequestBody UserDTO userDto, BindingResult bindingResult) {
-		Boolean sendMail = false;
-		HashMap<String, Object> parameters = new HashMap<String, Object>();
-		try {
-			if (bindingResult.hasFieldErrors()) {
-				List<FieldError> listFieldErrors = bindingResult.getFieldErrors();
-				StringBuilder msgStr = new StringBuilder("Wrong fields");
-				for (FieldError fieldError : listFieldErrors) {
-					msgStr.append("\n -").append(fieldError.getObjectName());
-					msgStr.append(" - ").append(fieldError.getCode());
-				}
-
-				return new ResponseEntity<MessageDTO>(new MessageDTO(msgStr.toString()), HttpStatus.BAD_REQUEST);
-			}
-			if (bindingResult.hasErrors()) {
-				List<ObjectError> listErrors = bindingResult.getAllErrors();
-				StringBuilder msgStr = new StringBuilder("Wrong fields or invalid email");
-				for (ObjectError objectError : listErrors) {
-					msgStr.append("\n -").append(objectError.getObjectName());
-					msgStr.append(" - ").append(objectError.getCode());
-				}
-				return new ResponseEntity<MessageDTO>(new MessageDTO(msgStr.toString()), HttpStatus.BAD_REQUEST);
-			}
-
-			if (this.userService.existsByUsername(userDto.getUsername())) {
-				return new ResponseEntity<MessageDTO>(new MessageDTO("This username already exists"), HttpStatus.BAD_REQUEST);
-			}
-			if (this.userService.existsByEmail(userDto.getEmail())) {
-				return new ResponseEntity<MessageDTO>(new MessageDTO("This email already exists"), HttpStatus.BAD_REQUEST);
-			}
-			if (StringUtils.isBlank(userDto.getUsername())) {
-				return new ResponseEntity<MessageDTO>(new MessageDTO("This username is mandatory"), HttpStatus.BAD_REQUEST);
-			}
-			if (StringUtils.isBlank(userDto.getEmail())) {
-				return new ResponseEntity<MessageDTO>(new MessageDTO("This email is mandatory"), HttpStatus.BAD_REQUEST);
-			}
-
-			int length = 20;
-			String newPassword = com.cookingwebsite.crud.util.StringUtils.randomString(length);
-
-			// String newPassword = RandomStringUtils.randomAlphanumeric(15).toUpperCase();
-
-			userDto.setPassword(newPassword);
-
-			parameters.put("firstname", userDto.getFirstname());
-			parameters.put("username", userDto.getUsername());
-			parameters.put("password", userDto.getPassword());
-			parameters.put("email", userDto.getEmail());
-			parameters.put("isNewUser", true);
-
-			String hashedPassword = this.passwordEncoder.encode(userDto.getPassword());
-
-			User user = new User(userDto.getUsername(), userDto.getFirstname(), userDto.getLastname(), userDto.getEmail(), hashedPassword);
 
 			Set<Role> roles = new HashSet<Role>();
 			/*
 			 * If the role is in the array, we insert it, otherwise the User role is added.
 			 */
 			roles = this.parseListRoleDTORole(userDto.getRoles());
-
 			user.setRoles(roles);
 			this.userService.save(user);
 
@@ -207,8 +122,10 @@ public class AuthController {
 			User createdUser = this.getUserByUsername(username);
 			if (createdUser != null) {
 				user.setAuCreationUser(createdUser.getId());
+				user.setAuActive(true);
 				this.userService.save(user);
 			}
+			sendMail = true;
 			log.info("Saved user");
 		} catch (Exception e) {
 			log.error(("ERROR - Creating the user --> ").concat(userDto.getUsername()).concat(" - ").concat(e.getMessage()));
@@ -221,28 +138,134 @@ public class AuthController {
 		return new ResponseEntity<MessageDTO>(new MessageDTO("Saved user"), HttpStatus.CREATED);
 	}
 	
+	@PostMapping("/admin-new")
+	public ResponseEntity<?> adminCreate(@Valid @RequestBody UserDTO userDto, BindingResult bindingResult) {
+		Boolean sendMail = false;
+		HashMap<String, Object> parameters = new HashMap<String, Object>();
+		try {
+			if (bindingResult.hasFieldErrors()) {
+				List<FieldError> listFieldErrors = bindingResult.getFieldErrors();
+				StringBuilder msgStr = new StringBuilder("Wrong fields");
+				for (FieldError fieldError : listFieldErrors) {
+					msgStr.append("\n -").append(fieldError.getObjectName());
+					msgStr.append(" - ").append(fieldError.getCode());
+				}
+				
+				return new ResponseEntity<MessageDTO>(new MessageDTO(msgStr.toString()), HttpStatus.BAD_REQUEST);
+			}
+			if (bindingResult.hasErrors()) {
+				List<ObjectError> listErrors = bindingResult.getAllErrors();
+				StringBuilder msgStr = new StringBuilder("Wrong fields or invalid email");
+				for (ObjectError objectError : listErrors) {
+					msgStr.append("\n -").append(objectError.getObjectName());
+					msgStr.append(" - ").append(objectError.getCode());
+				}
+				return new ResponseEntity<MessageDTO>(new MessageDTO(msgStr.toString()), HttpStatus.BAD_REQUEST);
+			}
+			
+			if (this.userService.existsByUsername(userDto.getUsername())) {
+				return new ResponseEntity<MessageDTO>(new MessageDTO("This username already exists"), HttpStatus.BAD_REQUEST);
+			}
+			if (this.userService.existsByEmail(userDto.getEmail())) {
+				return new ResponseEntity<MessageDTO>(new MessageDTO("This email already exists"), HttpStatus.BAD_REQUEST);
+			}
+			if (StringUtils.isBlank(userDto.getUsername())) {
+				return new ResponseEntity<MessageDTO>(new MessageDTO("This username is mandatory"), HttpStatus.BAD_REQUEST);
+			}
+			if (StringUtils.isBlank(userDto.getEmail())) {
+				return new ResponseEntity<MessageDTO>(new MessageDTO("This email is mandatory"), HttpStatus.BAD_REQUEST);
+			}
+			
+			int length = 20;
+			String newPassword = com.cookingwebsite.crud.util.StringUtils.randomString(length);
+			
+			// String newPassword = RandomStringUtils.randomAlphanumeric(15).toUpperCase();
+			
+			userDto.setPassword(newPassword);
+			
+			parameters.put("firstname", userDto.getFirstname());
+			parameters.put("username", userDto.getUsername());
+			parameters.put("password", userDto.getPassword());
+			parameters.put("email", userDto.getEmail());
+			parameters.put("isNewUser", true);
+			
+			String hashedPassword = this.passwordEncoder.encode(userDto.getPassword());
+			
+			User user = new User(userDto.getUsername(), userDto.getFirstname(), userDto.getLastname(), userDto.getEmail(), hashedPassword);
+			
+			Set<Role> roles = new HashSet<Role>();
+			/*
+			 * If the role is in the array, we insert it, otherwise the User role is added.
+			 */
+			roles = this.parseListRoleDTORole(userDto.getRoles());
+			
+			user.setRoles(roles);
+			user.setAuActive(false);
+			this.userService.save(user);
+			
+			/*
+			 * It is saved first and once created, the generated user's own user identifier is saved as the creation user.
+			 */
+			String username = user.getUsername();
+			User createdUser = this.getUserByUsername(username);
+			if (createdUser != null) {
+				user.setAuCreationUser(createdUser.getId());
+				this.userService.save(user);
+			}
+			log.info("Saved user");
+			sendMail = true;
+		} catch (Exception e) {
+			log.error(("ERROR - Creating the user --> ").concat(userDto.getUsername()).concat(" - ").concat(e.getMessage()));
+			sendMail = false;
+		} finally {
+			if (sendMail) {
+				SendEmailsUtils.sendUserCredentials(parameters);
+			}
+		}
+		return new ResponseEntity<MessageDTO>(new MessageDTO("Saved user"), HttpStatus.CREATED);
+	}
+
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@Valid @RequestBody LoginUserDTO loginUsuario, BindingResult bindingResult) {
 		if (bindingResult.hasErrors()) {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("Wrong fields"), HttpStatus.BAD_REQUEST);
 		}
-		Authentication authentication = this.authenticationManager
-				.authenticate(new UsernamePasswordAuthenticationToken(loginUsuario.getUsername(), loginUsuario.getPassword()));
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		String jwt = this.jwtProvider.generateToken(authentication);
-		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-		JwtDTO jwtDto = new JwtDTO(jwt, userDetails.getUsername(), userDetails.getAuthorities());
+		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
+				loginUsuario.getUsername(), loginUsuario.getPassword());
 
-		User authenticatedUser = this.getUserByUsername(userDetails.getUsername());
-		if (authenticatedUser.getLastConnection() != null) {
-			final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
-			authenticatedUser.setLastConnection(currentDate);
+		Authentication authentication = null;
+		try {
+			authentication = this.authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+		} catch (Exception e) {
+			log.error(("ERROR - login the user --> ").concat(loginUsuario.getPassword()).concat(" - ").concat(e.getMessage()));
+			return new ResponseEntity<MessageDTO>(new MessageDTO(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
-		this.userService.save(authenticatedUser);
-		
+
+		String jwt = "";
+		JwtDTO jwtDto = new JwtDTO();
+		if (authentication != null) {
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+			jwt = this.jwtProvider.generateToken(authentication);
+			UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+			jwtDto = new JwtDTO(jwt, userDetails.getUsername(), userDetails.getAuthorities());
+
+			User authenticatedUser = this.getUserByUsername(userDetails.getUsername());
+			if (authenticatedUser.getLastConnection() != null) {
+				final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
+				authenticatedUser.setLastConnection(currentDate);
+			}
+
+			this.userService.save(authenticatedUser);
+		}
+		/*
+		 * MainSecurity mainSecurity = new MainSecurity(); // mainSecurity.restTemplate().getForEntity(url, responseType)y("",
+		 * HttpStatus.OK); ResponseEntity<String> response = null; try { response =
+		 * mainSecurity.restTemplate().getForEntity("https://localhost:8443/index", String.class, Collections.emptyMap()); }
+		 * catch (Exception e) { // TODO Auto-generated catch block e.printStackTrace(); } return response;
+		 */
 		return new ResponseEntity<JwtDTO>(jwtDto, HttpStatus.OK);
 	}
-
+	
 	/**
 	 * @param username
 	 * @return
@@ -256,31 +279,31 @@ public class AuthController {
 			log.error(
 					"ERROR - Getting the user --> ".concat((username != null) ? username : "is null").concat(" - ").concat(e.getMessage()));
 		}
-
+		
 		if ((optionalUser != null) && (!optionalUser.isEmpty())) {
 			user = optionalUser.get();
 		}
-
+		
 		return user;
 	}
-
+	
 	// @PreAuthorize("hasRole('ROLE_ADMIN')")
 	@GetMapping("/list")
 	public ResponseEntity<List<User>> list() {
 		List<User> list = this.userService.list();
 		return new ResponseEntity<List<User>>(list, HttpStatus.OK);
 	}
-
+	
 	@GetMapping("/detail/{id}")
 	public ResponseEntity<?> getById(@PathVariable("id") int id) {
 		if (!this.userService.existsById(id)) {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("User does not exist"), HttpStatus.NOT_FOUND);
 		}
 		User user = this.userService.getOne(id).get();
-		
+
 		return new ResponseEntity<User>(user, HttpStatus.OK);
 	}
-	
+
 	@GetMapping("/detail-username/{username}")
 	public ResponseEntity<?> getByUsername(@PathVariable("username") String username) {
 		if (!this.userService.existsByUsername(username)) {
@@ -289,7 +312,7 @@ public class AuthController {
 		User user = this.userService.getByUsername(username).get();
 		return new ResponseEntity<User>(user, HttpStatus.OK);
 	}
-
+	
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@GetMapping("/detail-email/{email}")
 	public ResponseEntity<?> getByEmail(@PathVariable("email") String email) {
@@ -299,7 +322,7 @@ public class AuthController {
 		User user = this.userService.getByEmail(email).get();
 		return new ResponseEntity<User>(user, HttpStatus.OK);
 	}
-
+	
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@PostMapping("/create")
 	public ResponseEntity<?> createAdmin(@RequestBody UserDTO userDto) {
@@ -321,18 +344,20 @@ public class AuthController {
 			if (StringUtils.isBlank(userDto.getPassword())) {
 				return new ResponseEntity<MessageDTO>(new MessageDTO("This password is mandatory"), HttpStatus.BAD_REQUEST);
 			}
-			
+
 			parameters.put("firstname", userDto.getFirstname());
 			parameters.put("username", userDto.getUsername());
 			parameters.put("password", userDto.getPassword());
 			parameters.put("email", userDto.getEmail());
 			parameters.put("isNewUser", true);
-			
+
 			String hashedPassword = this.passwordEncoder.encode(userDto.getPassword());
-			
+
 			User user = new User(userDto.getUsername(), userDto.getFirstname(), userDto.getLastname(), userDto.getEmail(), hashedPassword);
+			user.setAuActive(false);
 			this.userService.save(user);
 			log.info("Created user");
+			sendMail = true;
 		} catch (Exception e) {
 			log.error(("ERROR - Creating the user --> ").concat(userDto.getUsername()).concat(" - ").concat(e.getMessage()));
 			sendMail = false;
@@ -343,7 +368,7 @@ public class AuthController {
 		}
 		return new ResponseEntity<MessageDTO>(new MessageDTO("User creado"), HttpStatus.OK);
 	}
-
+	
 	@PutMapping("/update/{id}")
 	public ResponseEntity<?> update(@PathVariable("id") int id, @RequestBody UserDTO userDto) {
 		Boolean sendMail = false;
@@ -362,19 +387,19 @@ public class AuthController {
 			 * if (StringUtils.isBlank(userDto.getPassword())) { return new ResponseEntity<MessageDTO>(new
 			 * MessageDTO("This password is mandatory"), HttpStatus.BAD_REQUEST); }
 			 */
-
+			
 			User user = this.userService.getOne(id).get();
 			user.setUsername(userDto.getUsername());
-
+			
 			if ((userDto.getPassword() != null) && !StringUtils.isBlank(userDto.getPassword())) {
 				userDto.setPassword(userDto.getPassword());
-
+				
 				parameters.put("firstname", userDto.getFirstname());
 				parameters.put("username", userDto.getUsername());
 				parameters.put("password", userDto.getPassword());
 				parameters.put("email", userDto.getEmail());
 				parameters.put("isNewUser", false);
-
+				
 				String hashedPassword = this.passwordEncoder.encode(userDto.getPassword());
 				user.setPassword(hashedPassword);
 			}
@@ -382,7 +407,12 @@ public class AuthController {
 			user.setLastname(userDto.getLastname());
 			user.setEmail(userDto.getEmail());
 			user.setLastConnection(userDto.getLastConnection());
-
+			if (userDto.getAuActive() != null) {
+				user.setAuActive(userDto.getAuActive());
+			} else {
+				user.setAuActive(true);
+			}
+			
 			final Timestamp currentDate = new Timestamp(Calendar.getInstance().getTimeInMillis());
 			user.setAuModificationDate(currentDate);
 			Optional<User> optionalUser = null;
@@ -402,10 +432,10 @@ public class AuthController {
 			if (auModificationUser != null) {
 				user.setAuModificationUser(auModificationUser);
 			}
-
+			
 			Set<Role> roles = new HashSet<Role>();
 			roles = this.parseListRoleDTORole(userDto.getRoles());
-
+			
 //			for (RoleDTO roleDTO : userDto.getRoles()) {
 //				RoleName roleName = null;
 //				if (roleDTO.getRoleName().equals(RoleName.ROLE_ADMIN)) {
@@ -420,9 +450,9 @@ public class AuthController {
 //				Role role = new Role(roleName);
 //				roles.add(role);
 //			}
-
+			
 			user.setRoles(roles);
-
+			
 			try {
 				this.userService.save(user);
 			} catch (Exception e) {
@@ -430,6 +460,7 @@ public class AuthController {
 						.concat(" - ").concat(e.getMessage()));
 			}
 			log.info("Created user");
+			sendMail = true;
 		} catch (Exception e) {
 			log.error(("ERROR - Creating the user --> ").concat(userDto.getUsername()).concat(" - ").concat(e.getMessage()));
 			sendMail = false;
@@ -440,7 +471,7 @@ public class AuthController {
 		}
 		return new ResponseEntity<MessageDTO>(new MessageDTO("User updated"), HttpStatus.OK);
 	}
-
+	
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> delete(@PathVariable("id") int id) {
@@ -450,7 +481,7 @@ public class AuthController {
 		this.userService.delete(id);
 		return new ResponseEntity<MessageDTO>(new MessageDTO("User deleted"), HttpStatus.OK);
 	}
-	
+
 	/**
 	 * @param rolesDTOList
 	 * @return Set<Role>
@@ -473,7 +504,7 @@ public class AuthController {
 			roles.add(this.roleService.getByRoleName(RoleName.ROLE_USER).get());
 		}
 		return roles;
-
+		
 	}
-
+	
 }

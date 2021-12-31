@@ -41,7 +41,8 @@ public class Recipe {
 	private User user;
 	
 //	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-	@OneToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }/* , orphanRemoval = true */)
+	
+	@OneToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }/* ,orphanRemoval = true */)
 	@JoinTable(name = "RecipeKeyword", joinColumns = @JoinColumn(name = "recipe_id"), inverseJoinColumns = @JoinColumn(name = "keyword_id"))
 	private Set<Keyword> keywords = new HashSet<>();
 

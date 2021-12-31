@@ -24,11 +24,13 @@ import com.cookingwebsite.crud.model.Comment;
 import com.cookingwebsite.crud.service.CommentService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "Comment", description = "Comments API")
 @RestController
 @RequestMapping("/comment")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class CommentController {
 
 	@Autowired
@@ -45,17 +47,27 @@ public class CommentController {
 		if (!this.commentService.existsById(id)) {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
-		final Comment Comment = this.commentService.getOne(id).get();
-		return new ResponseEntity<Comment>(Comment, HttpStatus.OK);
+		Comment comment = new Comment();
+		try {
+			comment = this.commentService.getOne(id).get();
+		} catch (Exception e) {
+			log.error("-- getById -".concat(e.getMessage()));
+		}
+		return new ResponseEntity<Comment>(comment, HttpStatus.OK);
 	}
 	
 	@GetMapping("/detailcomment/{comment}")
-	public ResponseEntity<?> getByNombre(@PathVariable("comment") final String comment) {
-		if (!this.commentService.existsByComment(comment)) {
+	public ResponseEntity<?> getByNombre(@PathVariable("comment") final String commentStr) {
+		if (!this.commentService.existsByComment(commentStr)) {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("It does not exist"), HttpStatus.NOT_FOUND);
 		}
-		final Comment Comment = this.commentService.getByComment(comment).get();
-		return new ResponseEntity<Comment>(Comment, HttpStatus.OK);
+		Comment comment = new Comment();
+		try {
+			this.commentService.getByComment(commentStr).get();
+		} catch (Exception e) {
+			log.error("-- getByNombre -".concat(e.getMessage()));
+		}
+		return new ResponseEntity<Comment>(comment, HttpStatus.OK);
 	}
 	
 	// @PreAuthorize("hasRole('ROLE_ADMIN','ROLE_CHEF')")
@@ -70,7 +82,15 @@ public class CommentController {
 		}
 		
 		final Comment comment = new Comment(commentDTO.getComment(), commentDTO.getAuCreationUser());
-		this.commentService.save(comment);
+		final Timestamp fechaActual = new Timestamp(Calendar.getInstance().getTimeInMillis());
+		comment.setAuCreationDate(fechaActual);
+		
+		try {
+			this.commentService.save(comment);
+		} catch (Exception e) {
+			log.error("-- create -".concat(e.getMessage()));
+		}
+
 		responseEntity = new ResponseEntity<MessageDTO>(new MessageDTO("Comment created"), HttpStatus.OK);
 		return responseEntity;
 	}
@@ -89,7 +109,11 @@ public class CommentController {
 		comment.setAuModificationUser(commentDTO.getAuModificationUser());
 		final Timestamp fechaActual = new Timestamp(Calendar.getInstance().getTimeInMillis());
 		comment.setAuModificationDate(fechaActual);
-		this.commentService.save(comment);
+		try {
+			this.commentService.save(comment);
+		} catch (Exception e) {
+			log.error("-- update -".concat(e.getMessage()));
+		}
 		return new ResponseEntity<MessageDTO>(new MessageDTO("Comment updated"), HttpStatus.OK);
 	}
 
@@ -99,7 +123,12 @@ public class CommentController {
 			return new ResponseEntity<MessageDTO>(new MessageDTO("Comment not exist"), HttpStatus.NOT_FOUND);
 		}
 
-		this.commentService.delete(id);
+		try {
+			this.commentService.delete(id);
+		} catch (Exception e) {
+			log.error("-- delete -".concat(e.getMessage()));
+		}
+
 		return new ResponseEntity<MessageDTO>(new MessageDTO("Comment deleted"), HttpStatus.OK);
 	}
 	
